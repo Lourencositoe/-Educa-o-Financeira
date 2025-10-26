@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Educação Financeira - Descubra Seu Perfil</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-100px) translateX(50px); }
+            50% { transform: translateY(-200px) translateX(-50px); }
+            75% { transform: translateY(-100px) translateX(100px); }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: white;
+            text-align: center;
+        }
+
+        .loading-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 60px 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeInScale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .loading-content h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading-content p {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 400px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .quiz-container {
+            display: none;
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .question-counter {
+            font-size: 1.1em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .quiz-progress {
+            flex: 1;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 0 20px;
+            overflow: hidden;
+        }
+
+        .quiz-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .question-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .question-image:hover {
+            transform: scale(1.02);
+        }
+
+        .question {
+            font-size: 1.8em;
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            padding: 20px 25px;
+            background: #f7fafc;
+            border: 3px solid transparent;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 1.1em;
+            color: #4a5568;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .option:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .option:hover::before {
+            left: 100%;
+        }
+
+        .option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .lead-form {
+            display: none;
+            background: white;
+            border-radius: 30px;
+            padding: 50px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .lead-form h2 {
+            font-size: 2.2em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .lead-form p {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 35px;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-container {
+            display: none;
+            background: white;
+            border-radius: 30px;
+            padding: 50px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .result-header h2 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .result-header p {
+            font-size: 1.2em;
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        /*  Added countdown timer styles */
+        .countdown-section {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        }
+
+        .countdown-title {
+            color: white;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .countdown-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1em;
+            margin-bottom: 25px;
+        }
+
+        .countdown-timer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .countdown-item {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 100px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .countdown-value {
+            font-size: 3em;
+            font-weight: 700;
+            color: white;
+            line-height: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-family: 'Courier New', monospace;
+        }
+
+        .countdown-label {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .countdown-expired {
+            display: none;
+            color: white;
+            font-size: 1.2em;
+            font-weight: 600;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .countdown-item {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .countdown-item:nth-child(1) { animation-delay: 0s; }
+        .countdown-item:nth-child(2) { animation-delay: 0.2s; }
+        .countdown-item:nth-child(3) { animation-delay: 0.4s; }
+        /* </CHANGE> */
+
+        .modules {
+            margin-bottom: 40px;
+        }
+
+        .modules h3 {
+            font-size: 1.8em;
+            color: #2d3748;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .module-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .module-item {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+            animation: fadeInLeft 0.6s ease;
+            animation-fill-mode: both;
+        }
+
+        .module-item:nth-child(1) { animation-delay: 0.1s; }
+        .module-item:nth-child(2) { animation-delay: 0.2s; }
+        .module-item:nth-child(3) { animation-delay: 0.3s; }
+        .module-item:nth-child(4) { animation-delay: 0.4s; }
+        .module-item:nth-child(5) { animation-delay: 0.5s; }
+        .module-item:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .module-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .module-item h4 {
+            color: #2d3748;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .module-item p {
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .pricing {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .pricing h3 {
+            color: white;
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .price {
+            font-size: 3.5em;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .price-note {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 20px 50px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.3em;
+            font-weight: 700;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .testimonials {
+            margin-bottom: 40px;
+        }
+
+        .testimonials h3 {
+            font-size: 1.8em;
+            color: #2d3748;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .testimonial-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .testimonial-item {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #764ba2;
+            animation: fadeInRight 0.6s ease;
+            animation-fill-mode: both;
+        }
+
+        .testimonial-item:nth-child(1) { animation-delay: 0.1s; }
+        .testimonial-item:nth-child(2) { animation-delay: 0.2s; }
+        .testimonial-item:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .testimonial-item p {
+            color: #4a5568;
+            font-style: italic;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            color: #667eea;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stars {
+            color: #fbbf24;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 20px 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            animation: slideInLeft 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 350px;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-content strong {
+            color: #2d3748;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .notification-content span {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .loading-content {
+                padding: 40px 25px;
+            }
+
+            .loading-content h1 {
+                font-size: 1.8em;
+            }
+
+            .quiz-container,
+            .lead-form,
+            .result-container {
+                padding: 30px 20px;
+                border-radius: 20px;
+            }
+
+            .question {
+                font-size: 1.4em;
+            }
+
+            .question-image {
+                height: 200px;
+            }
+
+            .option {
+                padding: 15px 20px;
+                font-size: 1em;
+            }
+
+            .result-header h2 {
+                font-size: 1.8em;
+            }
+
+            .price {
+                font-size: 2.5em;
+            }
+
+            .notification {
+                left: 10px;
+                right: 10px;
+                max-width: none;
+            }
+
+            /*  Mobile responsive countdown */
+            .countdown-item {
+                min-width: 80px;
+                padding: 15px;
+            }
+
+            .countdown-value {
+                font-size: 2.2em;
+            }
+
+            .countdown-label {
+                font-size: 0.8em;
+            }
+
+            .countdown-title {
+                font-size: 1.1em;
+            }
+            /* </CHANGE> */
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="loading-screen" id="loadingScreen">
+            <div class="loading-content">
+                <h1>Preparando seu Quiz...</h1>
+                <p>Descubra seu perfil financeiro em minutos</p>
+                <div class="progress-container">
+                    <div class="progress-bar" id="loadingProgress"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-container" id="quizContainer">
+            <div class="progress-header">
+                <span class="question-counter" id="questionCounter">Pergunta 1 de 10</span>
+                <div class="quiz-progress">
+                    <div class="quiz-progress-bar" id="quizProgressBar"></div>
+                </div>
+            </div>
+            <img src="/placeholder.svg" alt="Imagem da pergunta" class="question-image" id="questionImage">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+        </div>
+
+        <div class="lead-form" id="leadForm">
+            <h2>Quase lá! 🎉</h2>
+            <p>Preencha seus dados para receber seu resultado personalizado e acesso exclusivo ao curso</p>
+            <form id="contactForm">
+                <div class="form-group">
+                    <label for="name">Nome Completo</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Telefone/WhatsApp</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+                <button type="submit" class="submit-btn">Ver Meu Resultado</button>
+            </form>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-header">
+                <h2>Parabéns! Você completou o quiz! 🎊</h2>
+                <p>Baseado nas suas respostas, identificamos que você está pronto para transformar sua vida financeira. Conheça nosso curso completo de Educação Financeira!</p>
+            </div>
+
+            <!--  Added countdown timer section -->
+            <div class="countdown-section">
+                <div class="countdown-title">⏰ Oferta Especial Expira Em:</div>
+                <div class="countdown-subtitle">Garanta seu desconto antes que o tempo acabe!</div>
+                <div class="countdown-timer" id="countdownTimer">
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="hours">00</div>
+                        <div class="countdown-label">Horas</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="minutes">00</div>
+                        <div class="countdown-label">Minutos</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="seconds">00</div>
+                        <div class="countdown-label">Segundos</div>
+                    </div>
+                </div>
+                <div class="countdown-expired" id="countdownExpired">
+                    ⚠️ Oferta expirada! Entre em contato para saber sobre novas promoções.
+                </div>
+            </div>
+            <!-- </CHANGE> -->
+
+            <div class="modules">
+                <h3>O que você vai aprender:</h3>
+                <div class="module-list">
+                    <div class="module-item">
+                        <h4><span class="module-icon">1</span> Fundamentos da Educação Financeira</h4>
+                        <p>Aprenda os conceitos básicos para começar sua jornada financeira com o pé direito</p>
+                    </div>
+                    <div class="module-item">
+                        <h4><span class="module-icon">2</span> Orçamento Pessoal e Familiar</h4>
+                        <p>Domine técnicas para controlar suas finanças e alcançar seus objetivos</p>
+                    </div>
+                    <div class="module-item">
+                        <h4><span class="module-icon">3</span> Como Sair das Dívidas</h4>
+                        <p>Estratégias comprovadas para eliminar dívidas e recuperar sua saúde financeira</p>
+                    </div>
+                    <div class="module-item">
+                        <h4><span class="module-icon">4</span> Investimentos para Iniciantes</h4>
+                        <p>Descubra como fazer seu dinheiro trabalhar para você de forma segura</p>
+                    </div>
+                    <div class="module-item">
+                        <h4><span class="module-icon">5</span> Planejamento de Aposentadoria</h4>
+                        <p>Prepare-se para um futuro tranquilo e confortável</p>
+                    </div>
+                    <div class="module-item">
+                        <h4><span class="module-icon">6</span> Empreendedorismo Financeiro</h4>
+                        <p>Aprenda a criar fontes de renda extra e alcançar a independência financeira</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pricing">
+                <h3>Investimento no Seu Futuro</h3>
+                <div class="price">2.500 MT</div>
+                <p class="price-note">Acesso vitalício + Certificado + Suporte exclusivo</p>
+                <a href="https://wa.me/258123456789?text=Olá!%20Quero%20me%20inscrever%20no%20curso%20de%20Educação%20Financeira" class="cta-button" target="_blank">Quero Garantir Minha Vaga!</a>
+            </div>
+
+            <div class="testimonials">
+                <h3>O que nossos alunos dizem:</h3>
+                <div class="testimonial-list">
+                    <div class="testimonial-item">
+                        <p>"Esse curso mudou completamente minha relação com o dinheiro. Consegui sair das dívidas em 6 meses!"</p>
+                        <div class="testimonial-author">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <strong>Maria Silva - Maputo</strong>
+                        </div>
+                    </div>
+                    <div class="testimonial-item">
+                        <p>"Aprendi a investir e hoje tenho uma renda passiva que complementa meu salário. Recomendo!"</p>
+                        <div class="testimonial-author">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <strong>João Santos - Beira</strong>
+                        </div>
+                    </div>
+                    <div class="testimonial-item">
+                        <p>"Conteúdo prático e fácil de aplicar. Já estou vendo resultados na minha vida financeira!"</p>
+                        <div class="testimonial-author">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <strong>Ana Costa - Nampula</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <div class="notification-avatar" id="notificationAvatar"></div>
+        <div class="notification-content">
+            <strong id="notificationName"></strong>
+            <span id="notificationMessage"></span>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Como você descreveria sua situação financeira atual?",
+                image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&h=400&fit=crop",
+                options: [
+                    "Tenho dívidas e dificuldade para pagar contas",
+                    "Consigo pagar as contas, mas não sobra nada",
+                    "Consigo poupar um pouco todo mês",
+                    "Tenho uma boa reserva financeira"
+                ]
+            },
+            {
+                question: "Você tem um orçamento mensal definido?",
+                image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=400&fit=crop",
+                options: [
+                    "Não, nunca fiz um orçamento",
+                    "Já tentei, mas não consigo seguir",
+                    "Sim, mas não sigo rigorosamente",
+                    "Sim, e acompanho regularmente"
+                ]
+            },
+            {
+                question: "Qual é o seu principal objetivo financeiro?",
+                image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop",
+                options: [
+                    "Sair das dívidas",
+                    "Ter uma reserva de emergência",
+                    "Investir para o futuro",
+                    "Alcançar independência financeira"
+                ]
+            },
+            {
+                question: "Você investe seu dinheiro?",
+                image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=400&fit=crop",
+                options: [
+                    "Não, não sei por onde começar",
+                    "Já ouvi falar, mas tenho medo",
+                    "Sim, mas pouco",
+                    "Sim, invisto regularmente"
+                ]
+            },
+            {
+                question: "Como você lida com compras por impulso?",
+                image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=400&fit=crop",
+                options: [
+                    "Compro sem pensar muito",
+                    "Às vezes me arrependo depois",
+                    "Tento controlar, mas é difícil",
+                    "Sempre penso bem antes de comprar"
+                ]
+            },
+            {
+                question: "Você tem uma reserva de emergência?",
+                image: "https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?w=800&h=400&fit=crop",
+                options: [
+                    "Não, não tenho nada guardado",
+                    "Tenho muito pouco",
+                    "Tenho para 1-3 meses",
+                    "Tenho para 6 meses ou mais"
+                ]
+            },
+            {
+                question: "Como você se sente em relação ao seu futuro financeiro?",
+                image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&h=400&fit=crop",
+                options: [
+                    "Muito preocupado e inseguro",
+                    "Um pouco ansioso",
+                    "Razoavelmente confiante",
+                    "Muito confiante e preparado"
+                ]
+            },
+            {
+                question: "Você acompanha seus gastos mensais?",
+                image: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=800&h=400&fit=crop",
+                options: [
+                    "Não, não faço ideia de quanto gasto",
+                    "Às vezes olho o extrato",
+                    "Sim, mas de forma básica",
+                    "Sim, controlo tudo detalhadamente"
+                ]
+            },
+            {
+                question: "Qual é o seu nível de conhecimento sobre finanças?",
+                image: "https://images.unsplash.com/photo-1434626881859-194d67b2b86f?w=800&h=400&fit=crop",
+                options: [
+                    "Muito baixo, não entendo nada",
+                    "Básico, sei o essencial",
+                    "Intermediário, entendo bem",
+                    "Avançado, domino o assunto"
+                ]
+            },
+            {
+                question: "Você tem planos para sua aposentadoria?",
+                image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=400&fit=crop",
+                options: [
+                    "Não, ainda não pensei nisso",
+                    "Penso, mas não faço nada",
+                    "Sim, estou começando a planejar",
+                    "Sim, já estou investindo para isso"
+                ]
+            }
+        ];
+
+        const notifications = [
+            { name: "Carlos M.", city: "Maputo", message: "acabou de se inscrever no curso" },
+            { name: "Beatriz S.", city: "Beira", message: "garantiu sua vaga há 2 minutos" },
+            { name: "Pedro L.", city: "Nampula", message: "acabou de se inscrever" },
+            { name: "Sofia R.", city: "Matola", message: "garantiu desconto especial" },
+            { name: "Miguel A.", city: "Tete", message: "acabou de se inscrever no curso" },
+            { name: "Lucia F.", city: "Quelimane", message: "garantiu sua vaga há 1 minuto" }
+        ];
+
+        let currentQuestion = 0;
+        let answers = [];
+
+        // ... existing code ...
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.width = Math.random() * 100 + 50 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        function simulateLoading() {
+            const progressBar = document.getElementById('loadingProgress');
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('loadingScreen').style.display = 'none';
+                        document.getElementById('quizContainer').style.display = 'block';
+                        loadQuestion();
+                    }, 500);
+                }
+                progressBar.style.width = progress + '%';
+            }, 300);
+        }
+
+        function loadQuestion() {
+            const data = quizData[currentQuestion];
+            document.getElementById('question').textContent = data.question;
+            document.getElementById('questionImage').src = data.image;
+            document.getElementById('questionCounter').textContent = `Pergunta ${currentQuestion + 1} de ${quizData.length}`;
+            
+            const progressPercent = ((currentQuestion) / quizData.length) * 100;
+            document.getElementById('quizProgressBar').style.width = progressPercent + '%';
+
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            data.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.textContent = option;
+                optionDiv.onclick = () => selectOption(index, optionDiv);
+                optionsContainer.appendChild(optionDiv);
+            });
+        }
+
+        function selectOption(index, element) {
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            answers.push(index);
+            
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < quizData.length) {
+                    loadQuestion();
+                } else {
+                    showLeadForm();
+                }
+            }, 600);
+        }
+
+        function showLeadForm() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('leadForm').style.display = 'block';
+        }
+
+        function showResults() {
+            document.getElementById('leadForm').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+            
+            //  Start countdown timer when results are shown
+            startCountdown(15); // 15 minutes countdown
+            // </CHANGE>
+        }
+
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            const randomNotif = notifications[Math.floor(Math.random() * notifications.length)];
+            
+            const initials = randomNotif.name.split(' ').map(n => n[0]).join('');
+            document.getElementById('notificationAvatar').textContent = initials;
+            document.getElementById('notificationName').textContent = randomNotif.name + ' de ' + randomNotif.city;
+            document.getElementById('notificationMessage').textContent = randomNotif.message;
+            
+            notification.style.display = 'flex';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 4000);
+        }
+
+        //  Added countdown timer functionality
+        function startCountdown(minutes) {
+            const endTime = new Date().getTime() + (minutes * 60 * 1000);
+            
+            const countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = endTime - now;
+                
+                if (distance < 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('countdownTimer').style.display = 'none';
+                    document.getElementById('countdownExpired').style.display = 'block';
+                    return;
+                }
+                
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            }, 1000);
+        }
+        // </CHANGE>
+
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                'entry.123456789': formData.get('name'),
+                'entry.987654321': formData.get('email'),
+                'entry.456789123': formData.get('phone')
+            };
+            
+            showResults();
+        });
+
+        createParticles();
+        simulateLoading();
+        
+        setInterval(showNotification, 4000);
+        setTimeout(showNotification, 2000);
+    </script>
+</body>
+</html>
